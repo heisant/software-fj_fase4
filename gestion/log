@@ -1,0 +1,42 @@
+# ======================================================================================================================
+# MÓDULO: logger.py
+# DESCRIPCIÓN: Configuración del archivo de logs para eventos y errores. Crea la carpeta 'logs' 
+#              si no existe y define funciones para registrar con diferentes niveles de severidad.
+# AUTOR: Heiner Santana Muñoz - Grupo 3 - UNAD
+# ======================================================================================================================
+
+import logging
+import os
+
+RAIZ = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+RUTA_LOGS = os.path.join(RAIZ, "logs")
+os.makedirs(RUTA_LOGS, exist_ok=True)
+ARCHIVO_LOG = os.path.join(RUTA_LOGS, "eventos.log")
+
+_logger = logging.getLogger("software_fj")
+_logger.setLevel(logging.INFO)
+
+if not _logger.handlers:
+    _manejador = logging.FileHandler(ARCHIVO_LOG, mode="w", encoding="utf-8")
+    _manejador.setFormatter(logging.Formatter("%(asctime)s | %(levelname)-8s | %(message)s"))
+    _logger.addHandler(_manejador)
+
+def registrar_evento(mensaje):
+    """Registra un evento normal."""
+    _logger.info(mensaje)
+
+def registrar_advertencia(mensaje):
+    """Registra una situación anómala no crítica."""
+    _logger.warning(mensaje)
+
+def registrar_error(mensaje, excepcion=None):
+    """Registra un error con su causa si existe (soporta encadenamiento)."""
+    if excepcion is not None:
+        causa = excepcion.__cause__
+        codigo = getattr(excepcion, "codigo", "FJ-999")
+        texto = f"[{codigo}] {mensaje} -> {type(excepcion).__name__}: {excepcion}"
+        if causa is not None:
+            texto += f" | causa: {type(causa).__name__}: {causa}"
+        _logger.error(texto)
+    else:
+        _logger.error(mensaje)
