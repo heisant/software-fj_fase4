@@ -218,3 +218,10 @@ __marimo__/
 
 # Streamlit
 .streamlit/secrets.toml
+
+# =========================================================================
+# Reglas específicas para el proyecto Software FJ (UNAD - Fase 4)
+# =========================================================================
+# Ignorar la carpeta de logs y cualquier archivo .log generado en tiempo de ejecución
+logs/
+*.log
