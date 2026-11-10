@@ -2,41 +2,41 @@
 # MÓDULO: logger.py
 # DESCRIPCIÓN: Configuración del archivo de logs para eventos y errores. Crea la carpeta 'logs' 
 #              si no existe y define funciones para registrar con diferentes niveles de severidad.
-# AUTOR: Heiner Santana Muñoz - Grupo 3 - UNAD
+# AUTOR: Heiner Santana Muñoz - Grupo 62 - UNAD
 # ======================================================================================================================
 
-"""Configuración del archivo de logs para eventos y errores."""  # Docstring del módulo
-import logging  # Módulo estándar de registro de eventos
-import os  # Módulo para manejar rutas de carpetas
+import logging
+import os
 
-RAIZ = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))  # Carpeta raíz del proyecto (un nivel sobre gestion)
-RUTA_LOGS = os.path.join(RAIZ, "logs")  # Carpeta logs en la raíz del proyecto
-os.makedirs(RUTA_LOGS, exist_ok=True)  # Crea la carpeta si no existe
-ARCHIVO_LOG = os.path.join(RUTA_LOGS, "eventos.log")  # Ruta completa del archivo de log
+RAIZ = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+RUTA_LOGS = os.path.join(RAIZ, "logs")
+os.makedirs(RUTA_LOGS, exist_ok=True)
+ARCHIVO_LOG = os.path.join(RUTA_LOGS, "eventos.log")
 
-_logger = logging.getLogger("software_fj")  # Obtiene el logger principal del sistema
-_logger.setLevel(logging.INFO)  # Registra desde el nivel INFO hacia arriba
-if not _logger.handlers:  # Evita duplicar manejadores si se importa varias veces
-    _manejador = logging.FileHandler(ARCHIVO_LOG, mode="w", encoding="utf-8")  # Archivo nuevo en cada ejecución
-    _manejador.setFormatter(logging.Formatter("%(asctime)s | %(levelname)-8s | %(message)s"))  # Formato de cada línea
-    _logger.addHandler(_manejador)  # Asocia el manejador al logger
+_logger = logging.getLogger("software_fj")
+_logger.setLevel(logging.INFO)
 
+if not _logger.handlers:
+    _manejador = logging.FileHandler(ARCHIVO_LOG, mode="w", encoding="utf-8")
+    _manejador.setFormatter(logging.Formatter("%(asctime)s | %(levelname)-8s | %(message)s"))
+    _logger.addHandler(_manejador)
 
-def registrar_evento(mensaje):  # Registra un evento normal
-    _logger.info(mensaje)  # Escribe la línea con nivel INFO
+def registrar_evento(mensaje):
+    """Registra un evento normal."""
+    _logger.info(mensaje)
 
+def registrar_advertencia(mensaje):
+    """Registra una situación anómala no crítica."""
+    _logger.warning(mensaje)
 
-def registrar_advertencia(mensaje):  # Registra una situación anómala no crítica
-    _logger.warning(mensaje)  # Escribe la línea con nivel WARNING
-
-
-def registrar_error(mensaje, excepcion=None):  # Registra un error con su causa si existe
-    if excepcion is not None:  # Si se recibió la excepción original
-        causa = excepcion.__cause__  # Obtiene la excepción encadenada (raise ... from ...)
-        codigo = getattr(excepcion, "codigo", "FJ-999")  # Toma el código o usa uno genérico
-        texto = f"[{codigo}] {mensaje} -> {type(excepcion).__name__}: {excepcion}"  # Arma el texto del error
-        if causa is not None:  # Si el error tiene una causa encadenada
-            texto += f" | causa: {type(causa).__name__}: {causa}"  # Agrega la causa al texto
-        _logger.error(texto)  # Escribe la línea con nivel ERROR
-    else:  # Si no hay excepción asociada
-        _logger.error(mensaje)  # Escribe solo el mensaje
+def registrar_error(mensaje, excepcion=None):
+    """Registra un error con su causa si existe (soporta encadenamiento)."""
+    if excepcion is not None:
+        causa = excepcion.__cause__
+        codigo = getattr(excepcion, "codigo", "FJ-999")
+        texto = f"[{codigo}] {mensaje} -> {type(excepcion).__name__}: {excepcion}"
+        if causa is not None:
+            texto += f" | causa: {type(causa).__name__}: {causa}"
+        _logger.error(texto)
+    else:
+        _logger.error(mensaje)
