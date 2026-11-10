@@ -1,4 +1,13 @@
 
+from .excepciones import (
+    ClienteNoValidoError,
+    ServicioNoValidoError,
+    DuracionInvalidaError,
+    EstadoReservaError,
+    CalculoCostoError
+)
+
+
 class Reserva:
     """
     Representa una reserva de un servicio de Software FJ.
@@ -8,13 +17,15 @@ class Reserva:
 
         # Validar los datos recibidos
         if cliente is None:
-            raise ValueError("El cliente es obligatorio.")
+            raise ClienteNoValidoError("El cliente es obligatorio.")
 
         if servicio is None:
-            raise ValueError("El servicio es obligatorio.")
+            raise ServicioNoValidoError("El servicio es obligatorio.")
 
-        if not isinstance(duracion, (int, float)) or duracion <= 0:
-            raise ValueError("La duración debe ser un número positivo.")
+        if not isinstance(duracion, (int, float)) or isinstance(duracion, bool) or duracion <= 0:
+            raise DuracionInvalidaError(
+                "La duración debe ser un número positivo."
+            )
 
         # Atributos encapsulados
         self.__id_reserva = id_reserva
@@ -27,7 +38,9 @@ class Reserva:
         """Confirma una reserva pendiente."""
 
         if self.__estado != "Pendiente":
-            raise ValueError("Solo se pueden confirmar reservas pendientes.")
+            raise EstadoReservaError(
+                "Solo se pueden confirmar reservas pendientes."
+            )
 
         self.__estado = "Confirmada"
         return "Reserva confirmada correctamente."
@@ -36,7 +49,7 @@ class Reserva:
         """Cancela una reserva que no esté cancelada."""
 
         if self.__estado == "Cancelada":
-            raise ValueError("La reserva ya está cancelada.")
+            raise EstadoReservaError("La reserva ya está cancelada.")
 
         self.__estado = "Cancelada"
         return "Reserva cancelada correctamente."
@@ -45,9 +58,17 @@ class Reserva:
         """Calcula el costo de una reserva confirmada."""
 
         if self.__estado != "Confirmada":
-            raise ValueError("La reserva debe estar confirmada.")
+            raise EstadoReservaError(
+                "La reserva debe estar confirmada."
+            )
 
-        return self.__servicio.calcular_costo(self.__duracion)
+        try:
+            return self.__servicio.calcular_costo(self.__duracion)
+
+        except Exception as error:
+            raise CalculoCostoError(
+                "No fue posible calcular el costo de la reserva."
+            ) from error
 
     def mostrar_informacion(self):
         """Muestra los datos principales de la reserva."""
