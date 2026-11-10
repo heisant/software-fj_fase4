@@ -1,153 +1,64 @@
-# ======================================================================================================================
-# MÓDULO: cliente.py
-# DESCRIPCIÓN: Clase Cliente con validaciones robustas y encapsulación estricta.
-#              Hereda de la clase abstracta Entidad.
-#              Valida nombre, cédula y email usando expresiones regulares.
-# AUTOR: Heiner Santana Muñoz - Grupo 3 - UNAD
-# ======================================================================================================================
+"""Clase Cliente con validaciones robustas y datos encapsulados."""  # Docstring del módulo
+import re  # Expresiones regulares para validar formatos
 
-import re
-import logging
-from abc import ABC, abstractmethod
+from .entidades import EntidadBase  # Clase abstracta base
+from .excepciones import ClienteInvalidoError  # Excepción propia de clientes
 
 
-# ======================================================================================================================
-# CLASE ABSTRACTA: Entidad
-# ======================================================================================================================
+class Cliente(EntidadBase):  # El cliente es una entidad del sistema
+    """Cliente de Software FJ con datos personales privados."""  # Descripción
 
-class Entidad(ABC):
-    """
-    Clase abstracta base que representa entidades generales del sistema.
-    Obliga a las clases hijas a implementar el método describir().
-    """
-    
-    def __init__(self, id_entidad: int):
-        """
-        Constructor de la clase Entidad.
-        
-        Args:
-            id_entidad (int): Identificador único de la entidad.
-        """
-        self._id_entidad = id_entidad  # Atributo protegido (encapsulamiento)
+    _familia = "cliente"  # Tipo de entidad para el contador de ids
+    PATRON_CORREO = re.compile(r"^[\w.+-]+@[\w-]+\.[\w.-]+$")  # Formato válido de correo
 
-    @property
-    def id_entidad(self) -> int:
-        """Getter del ID de la entidad."""
-        return self._id_entidad
+    def __init__(self, nombre, documento, correo, telefono):  # Constructor con datos personales
+        super().__init__()  # Genera el id mediante la clase base
+        self.nombre = nombre  # Pasa por el setter que valida el nombre
+        self.documento = documento  # Pasa por el setter que valida el documento
+        self.correo = correo  # Pasa por el setter que valida el correo
+        self.telefono = telefono  # Pasa por el setter que valida el teléfono
 
-    @abstractmethod
-    def describir(self) -> str:
-        """
-        Método abstracto que debe ser implementado por todas las clases hijas.
-        Retorna una descripción en string de la entidad.
-        """
-        pass
+    @property  # Getter del nombre
+    def nombre(self):  # Devuelve el nombre privado
+        return self.__nombre  # Atributo privado (name mangling)
 
+    @nombre.setter  # Setter con validación
+    def nombre(self, valor):  # Recibe el nuevo nombre
+        if not isinstance(valor, str) or len(valor.strip()) < 3:  # Debe ser texto de al menos 3 letras
+            raise ClienteInvalidoError(f"Nombre inválido: {valor!r}")  # Lanza error propio
+        if any(c.isdigit() for c in valor):  # El nombre no debe contener números
+            raise ClienteInvalidoError("El nombre no puede contener números")  # Lanza error propio
+        self.__nombre = valor.strip().title()  # Guarda el nombre normalizado
 
-# ======================================================================================================================
-# EXCEPCIÓN PERSONALIZADA PARA CLIENTES
-# ======================================================================================================================
+    @property  # Getter del documento
+    def documento(self):  # Devuelve el documento privado
+        return self.__documento  # Atributo privado
 
-class ClienteInvalidoError(Exception):
-    """
-    Excepción personalizada lanzada cuando los datos de un cliente
-    no cumplen con las validaciones establecidas.
-    """
-    pass
+    @documento.setter  # Setter con validación
+    def documento(self, valor):  # Recibe el nuevo documento
+        if not str(valor).isdigit() or not 6 <= len(str(valor)) <= 10:  # Solo dígitos, de 6 a 10
+            raise ClienteInvalidoError(f"Documento inválido: {valor!r}")  # Lanza error propio
+        self.__documento = str(valor)  # Guarda el documento como texto
 
+    @property  # Getter del correo
+    def correo(self):  # Devuelve el correo privado
+        return self.__correo  # Atributo privado
 
-# ======================================================================================================================
-# CLASE CONCRETA: Cliente
-# ======================================================================================================================
+    @correo.setter  # Setter con validación
+    def correo(self, valor):  # Recibe el nuevo correo
+        if not isinstance(valor, str) or not self.PATRON_CORREO.match(valor):  # Verifica el formato
+            raise ClienteInvalidoError(f"Correo inválido: {valor!r}")  # Lanza error propio
+        self.__correo = valor.lower()  # Guarda el correo en minúsculas
 
-class Cliente(Entidad):
-    """
-    Clase que representa a un cliente del sistema Software FJ.
-    Implementa encapsulamiento estricto con @property y @setter.
-    Valida nombre, cédula y email al momento de la asignación.
-    """
-    
-    def __init__(self, id_cliente: int, nombre: str, cedula: str, email: str):
-        """
-        Constructor de la clase Cliente.
-        Llama al constructor de la clase padre (Entidad) y usa los setters
-        para aplicar validaciones desde la inicialización.
-        
-        Args:
-            id_cliente (int): Identificador único del cliente.
-            nombre (str): Nombre completo del cliente.
-            cedula (str): Número de cédula del cliente.
-            email (str): Correo electrónico del cliente.
-        """
-        super().__init__(id_cliente)  # Llamada al constructor de la clase padre
-        # Usamos los setters para aplicar validaciones automáticamente
-        self.nombre = nombre
-        self.cedula = cedula
-        self.email = email
-        logging.info(f"Cliente creado exitosamente: {self.nombre} (ID: {self.id_entidad})")
+    @property  # Getter del teléfono
+    def telefono(self):  # Devuelve el teléfono privado
+        return self.__telefono  # Atributo privado
 
-    # --- Encapsulamiento y Validaciones con @property ---
+    @telefono.setter  # Setter con validación
+    def telefono(self, valor):  # Recibe el nuevo teléfono
+        if not str(valor).isdigit() or len(str(valor)) != 10:  # Celular colombiano de 10 dígitos
+            raise ClienteInvalidoError(f"Teléfono inválido: {valor!r}")  # Lanza error propio
+        self.__telefono = str(valor)  # Guarda el teléfono como texto
 
-    @property
-    def nombre(self) -> str:
-        """Getter del nombre del cliente."""
-        return self._nombre
-
-    @nombre.setter
-    def nombre(self, valor: str):
-        """
-        Setter del nombre con validación.
-        Valida que sea un string y tenga al menos 3 caracteres.
-        """
-        if not isinstance(valor, str) or len(valor.strip()) < 3:
-            raise ClienteInvalidoError(
-                f"Nombre inválido: '{valor}'. Debe ser un texto con al menos 3 caracteres."
-            )
-        self._nombre = valor.strip()  # Eliminamos espacios en blanco al inicio y final
-
-    @property
-    def cedula(self) -> str:
-        """Getter de la cédula del cliente."""
-        return self._cedula
-
-    @cedula.setter
-    def cedula(self, valor: str):
-        """
-        Setter de la cédula con validación.
-        Valida que sea numérica y tenga al menos 5 dígitos.
-        """
-        if not valor.isdigit() or len(valor) < 5:
-            raise ClienteInvalidoError(
-                f"Cédula inválida: '{valor}'. Debe ser numérica y tener al menos 5 dígitos."
-            )
-        self._cedula = valor
-
-    @property
-    def email(self) -> str:
-        """Getter del email del cliente."""
-        return self._email
-
-    @email.setter
-    def email(self, valor: str):
-        """
-        Setter del email con validación usando expresión regular.
-        Valida el formato estándar de correo electrónico.
-        """
-        # Expresión regular para validar formato de email
-        regex = r'^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$'
-        if not re.match(regex, valor):
-            raise ClienteInvalidoError(
-                f"Email inválido: '{valor}'. Formato incorrecto (ej: usuario@dominio.com)."
-            )
-        self._email = valor
-
-    def describir(self) -> str:
-        """
-        Implementación del método abstracto de la clase Entidad.
-        Retorna una descripción legible del cliente.
-        """
-        return f"Cliente ID {self.id_entidad}: {self.nombre} (CC: {self.cedula}, Email: {self.email})"
-
-    def __str__(self):
-        """Método especial para representación en string."""
-        return self.describir()
+    def describir(self):  # Implementa el método abstracto
+        return f"Cliente #{self.id}: {self.nombre} (doc. {self.documento}, {self.correo})"  # Resumen del cliente
