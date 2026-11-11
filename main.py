@@ -77,35 +77,45 @@ def main():
                lambda: s.agregar_servicio(AlquilerEquipo("Portátil Dell", 12000, 10)))
     s.ejecutar("7. Creación de asesoría de redes (válida)",
                lambda: s.agregar_servicio(AsesoriaEspecializada("Asesoría en redes", 150000, "experto")))
+    # 8. Servicio inválido: tarifa negativa
     s.ejecutar("8. Creación de servicio con tarifa negativa",
                lambda: s.agregar_servicio(AlquilerEquipo("Proyector", -5000, 3)))
+    # 9. Servicio inválido: nivel inexistente
     s.ejecutar("9. Creación de asesoría con nivel inexistente",
                lambda: s.agregar_servicio(AsesoriaEspecializada("Asesoría cloud", 100000, "maestro")))
 
-    c1, c2 = s.clientes[0], s.clientes[1]
-    sala, equipo, asesoria = s.servicios[0], s.servicios[1], s.servicios[2]
+    c1, c2 = s.clientes[0], s.clientes[1]  # Clientes registrados correctamente
+    sala, equipo, asesoria = s.servicios[0], s.servicios[1], s.servicios[2]  # Servicios creados correctamente
 
+    # 10. Reserva exitosa
     s.ejecutar("10. Reserva exitosa de sala por 3 horas", lambda: s.reservar(c1, sala, 3))
+    # 11. Reserva exitosa de equipo (con descuento por 24 h)
     s.ejecutar("11. Reserva exitosa de equipo por 30 horas", lambda: s.reservar(c2, equipo, 30))
+    # 12. Reserva fallida: duración fuera de rango
     s.ejecutar("12. Reserva de asesoría con duración inválida (10 h)", lambda: s.reservar(c1, asesoria, 10))
-    
-    equipo_fuera = AlquilerEquipo("Cámara 4K", 20000, 2)
-    equipo_fuera.deshabilitar()
+    # 13. Reserva fallida: servicio no disponible
+    equipo_fuera = AlquilerEquipo("Cámara 4K", 20000, 2)  # Servicio que se deshabilitará
+    equipo_fuera.deshabilitar()  # Lo marca no disponible
     s.ejecutar("13. Reserva de servicio no disponible", lambda: s.reservar(c2, equipo_fuera, 2))
-    
+    # 14. Reserva fallida: parámetros faltantes
     s.ejecutar("14. Reserva sin cliente", lambda: s.reservar(None, sala, 2))
+    # 15. Cancelación válida
     s.ejecutar("15. Cancelación de la primera reserva", lambda: (s.reservas[0].cancelar(), s.reservas[0].describir())[1])
+    # 16. Operación no permitida: cancelar de nuevo
     s.ejecutar("16. Cancelar una reserva ya cancelada", lambda: s.reservas[0].cancelar())
+    # 17. Cálculo con sobrecarga: horas, impuesto y descuento
     s.ejecutar("17. Costo total con impuesto 19 % y descuento 10 %",
                lambda: f"${asesoria.calcular_costo_total(2, 0.19, 0.10):,.2f}")
+    # 18. Cálculo inconsistente: descuento mayor a 100 %
     s.ejecutar("18. Costo total con descuento inconsistente (150 %)",
                lambda: asesoria.calcular_costo_total(2, 0.19, 1.5))
 
-    print("\n=== RESUMEN ===")
-    print(f"Operaciones exitosas: {s.exitosas} | Errores controlados: {s.fallidas}")
-    print(f"Clientes: {len(s.clientes)} | Servicios: {len(s.servicios)} | Reservas: {len(s.reservas)}")
-    print("El programa terminó sin interrupciones. Revisa logs/eventos.log")
-    logger.registrar_evento("Fin de la simulación")
+    print("\n=== RESUMEN ===")  # Encabezado del resumen
+    print(f"Operaciones exitosas: {s.exitosas} | Errores controlados: {s.fallidas}")  # Totales
+    print(f"Clientes: {len(s.clientes)} | Servicios: {len(s.servicios)} | Reservas: {len(s.reservas)}")  # Listas
+    print("El programa terminó sin interrupciones. Revisa logs/eventos.log")  # Cierre
+    logger.registrar_evento("Fin de la simulación")  # Evento final
 
-if __name__ == "__main__":
-    main()
+
+if __name__ == "__main__":  # Punto de entrada
+    main()  # Ejecuta la simulación

@@ -28,4 +28,3 @@ Requiere Python 3.8 o superior. No usa librerías externas.
 - **Sobrecarga:** `calcular_costo_total(horas)`, `(horas, impuesto)` y `(horas, impuesto, descuento)`.
 - **Excepciones:** personalizadas, `try/except`, `try/except/else`, `try/except/finally` y encadenamiento con `raise ... from`.
 - **Estabilidad:** `main.py` captura cada error, lo registra y continúa con la siguiente operación.
-
