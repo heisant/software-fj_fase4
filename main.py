@@ -2,84 +2,75 @@
 # MÓDULO: main.py
 # DESCRIPCIÓN: Programa principal que simula 18 operaciones del sistema Software FJ sin base de datos.
 #              Demuestra estabilidad, robustez y manejo controlado de errores.
-# AUTOR: Heiner Santana Muñoz - Grupo 62 - UNAD
+# AUTOR: Heiner Santana Muñoz - Grupo 3 - UNAD
 # ======================================================================================================================
 
-"""Programa principal: simula las operaciones del sistema Software FJ sin base de datos."""  # Docstring
-from gestion.cliente import Cliente  # Clase de clientes
-from gestion.excepciones import ErrorSoftwareFJ  # Excepción base del sistema
-from gestion.reserva import Reserva  # Clase de reservas
-from gestion.servicios import AlquilerEquipo, AsesoriaEspecializada, ReservaSala  # Servicios concretos
-from gestion import logger  # Registro de eventos y errores
+from gestion.cliente import Cliente
+from gestion.excepciones import ErrorSoftwareFJ
+from gestion.reserva import Reserva
+from gestion.servicios import AlquilerEquipo, AsesoriaEspecializada, ReservaSala
+from gestion import logger
 
+class SistemaFJ:
+    """Gestor central de clientes, servicios y reservas."""
+    def __init__(self):
+        self.clientes = []
+        self.servicios = []
+        self.reservas = []
+        self.exitosas = 0
+        self.fallidas = 0
 
-class SistemaFJ:  # Administra las listas internas de entidades
-    """Gestor central de clientes, servicios y reservas."""  # Descripción
+    def ejecutar(self, titulo, operacion):
+        print(f"\n>> {titulo}")
+        try:
+            resultado = operacion()
+        except ErrorSoftwareFJ as error:
+            self.fallidas += 1
+            logger.registrar_error(titulo, error)
+            print(f"   [ERROR CONTROLADO] {error}")
+            if error.__cause__ is not None:
+                print(f"   Causa original: {error.__cause__}")
+        except Exception as error:
+            self.fallidas += 1
+            logger.registrar_error(f"{titulo} (inesperado): {error}")
+            print(f"   [ERROR INESPERADO] {error}")
+        else:
+            self.exitosas += 1
+            logger.registrar_evento(f"OK: {titulo}")
+            print(f"   [OK] {resultado}")
+        finally:
+            logger.registrar_evento(f"Fin de la operación: {titulo}")
 
-    def __init__(self):  # Constructor del sistema
-        self.clientes = []  # Lista interna de clientes
-        self.servicios = []  # Lista interna de servicios
-        self.reservas = []  # Lista interna de reservas
-        self.exitosas = 0  # Contador de operaciones exitosas
-        self.fallidas = 0  # Contador de operaciones con error controlado
+    def registrar_cliente(self, *datos):
+        cliente = Cliente(*datos)
+        self.clientes.append(cliente)
+        return cliente.describir()
 
-    def ejecutar(self, titulo, operacion):  # Ejecuta una operación sin detener el programa
-        print(f"\n>> {titulo}")  # Muestra el título de la operación
-        try:  # Intenta ejecutar la operación
-            resultado = operacion()  # Llama a la función recibida
-        except ErrorSoftwareFJ as error:  # Errores esperados del sistema
-            self.fallidas += 1  # Cuenta la falla controlada
-            logger.registrar_error(titulo, error)  # Escribe el error en el log
-            print(f"   [ERROR CONTROLADO] {error}")  # Informa en pantalla
-            if error.__cause__ is not None:  # Si hay una causa encadenada
-                print(f"   Causa original: {error.__cause__}")  # Muestra la causa
-        except Exception as error:  # Cualquier otro error inesperado
-            self.fallidas += 1  # Cuenta la falla
-            logger.registrar_error(f"{titulo} (inesperado): {error}")  # Registra el error
-            print(f"   [ERROR INESPERADO] {error}")  # Informa en pantalla
-        else:  # Sin errores
-            self.exitosas += 1  # Cuenta el éxito
-            logger.registrar_evento(f"OK: {titulo}")  # Registra el evento
-            print(f"   [OK] {resultado}")  # Muestra el resultado
-        finally:  # Se ejecuta siempre
-            logger.registrar_evento(f"Fin de la operación: {titulo}")  # Marca de cierre
+    def agregar_servicio(self, servicio):
+        self.servicios.append(servicio)
+        return servicio.describir()
 
-    def registrar_cliente(self, *datos):  # Crea y guarda un cliente
-        cliente = Cliente(*datos)  # Puede lanzar ClienteInvalidoError
-        self.clientes.append(cliente)  # Guarda en la lista
-        return cliente.describir()  # Devuelve la descripción
+    def reservar(self, cliente, servicio, horas, confirmar=True):
+        reserva = Reserva(cliente, servicio, horas)
+        self.reservas.append(reserva)
+        reserva.procesar()
+        if confirmar:
+            reserva.confirmar()
+        return reserva.describir()
 
-    def agregar_servicio(self, servicio):  # Guarda un servicio ya creado
-        self.servicios.append(servicio)  # Guarda en la lista
-        return servicio.describir()  # Devuelve la descripción
+def main():
+    s = SistemaFJ()
+    logger.registrar_evento("Inicio de la simulación de Software FJ")
+    print("=== SOFTWARE FJ: simulación de operaciones ===")
 
-    def reservar(self, cliente, servicio, horas, confirmar=True):  # Crea, procesa y confirma una reserva
-        reserva = Reserva(cliente, servicio, horas)  # Puede lanzar ReservaError
-        self.reservas.append(reserva)  # La guarda aunque falle, para dejar rastro
-        reserva.procesar()  # Calcula el costo
-        if confirmar:  # Si se pidió confirmar
-            reserva.confirmar()  # Confirma la reserva
-        return reserva.describir()  # Devuelve la descripción
-
-
-def main():  # Función principal con la simulación
-    s = SistemaFJ()  # Crea el sistema
-    logger.registrar_evento("Inicio de la simulación de Software FJ")  # Evento inicial
-    print("=== SOFTWARE FJ: simulación de operaciones ===")  # Encabezado
-
-    # 1. Cliente válido
     s.ejecutar("1. Registro de cliente válido (Heiner Santana)",
                lambda: s.registrar_cliente("heiner santana", "1079654500", "hesantanam@unadvirtual.edu.co", "3001234567"))
-    # 2. Cliente válido
     s.ejecutar("2. Registro de cliente válido (Laura Ospino)",
                lambda: s.registrar_cliente("Laura Ospino", "1045678123", "laura.ospino@correo.com", "3109876543"))
-    # 3. Cliente inválido: correo mal formado
     s.ejecutar("3. Registro de cliente con correo inválido",
                lambda: s.registrar_cliente("Carlos Polo", "1122334455", "carlos.polo#correo", "3151112233"))
-    # 4. Cliente inválido: documento con letras
     s.ejecutar("4. Registro de cliente con documento inválido",
                lambda: s.registrar_cliente("Ana Gómez", "12AB56", "ana@correo.com", "3201112233"))
-    # 5. Servicios válidos
     s.ejecutar("5. Creación de sala de juntas (válida)",
                lambda: s.agregar_servicio(ReservaSala("Sala Magdalena", 80000, 25)))
     s.ejecutar("6. Creación de alquiler de portátiles (válido)",
